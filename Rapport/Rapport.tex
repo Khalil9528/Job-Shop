@@ -1,0 +1,284 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{geometry}
+\geometry{hmargin=2.5cm, vmargin=2.5cm}
+\usepackage{hyperref}
+\usepackage{graphicx}
+
+\title{Rapport : Job-Shop Scheduling Problem}
+\author{BENKHALI KHALIL}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+Dans ce rapport, nous présentons un programme écrit en C++ qui permet de lire les données d'un graphe représentant des jobs et des machines, et de calculer la machine ayant la durée cumulée la plus longue. Ce calcul est réalisé à partir d'un fichier texte contenant les informations sur les jobs et les machines. Le résultat est ensuite stocké dans une structure et affiché à l'utilisateur.
+
+\section{Description du problème}
+
+Le problème consiste à lire un fichier texte contenant des informations sur un ensemble de jobs et de machines. Chaque ligne du fichier (à partir de la deuxième) représente un job et contient des paires (machine, durée), qui indiquent sur quelle machine le job doit être exécuté et pendant combien de temps.
+
+Le but est de calculer la somme des durées d'exécution pour chaque machine et d'identifier la machine qui a la durée totale la plus longue. Cette valeur est ensuite stockée dans une structure appelée \texttt{Instance}.
+
+\section{Réflexion et Analyse}
+
+Lors du développement de ce programme, j'ai dû réfléchir aux différents composants nécessaires pour résoudre efficacement le **Job Shop Scheduling Problem (JSSP)**. Voici les principales étapes de mon raisonnement :
+
+1. **Compréhension du Problème** :
+   J'ai d'abord analysé le format des données fournies dans le fichier texte, qui contient des informations sur les jobs et les machines, ainsi que les durées de chaque opération. Comprendre comment les jobs sont liés aux machines et aux durées était essentiel pour la structuration des données.
+
+2. **Structuration des Données** :
+   J'ai créé une structure \texttt{Instance} pour stocker les informations pertinentes, y compris le nombre de jobs et de machines, ainsi que des vecteurs pour les machines et les durées. Cela m'a permis d'organiser les données de manière à faciliter leur utilisation dans les différentes fonctions.
+
+3. **Lecture des Données** :
+   La fonction \texttt{lire\_graphe} est conçue pour lire les données du fichier texte et remplir la structure \texttt{Instance}. J'ai utilisé des vecteurs dynamiques pour stocker les machines et les durées, ce qui m'a permis de gérer facilement les tailles variables de jobs et d'opérations.
+
+4. **Génération du Vecteur de Bierwirth** :
+   La fonction \texttt{V\_Bierwirth} génère un vecteur représentant l'ordre des opérations. J'ai utilisé une technique de remplissage où chaque job apparaît plusieurs fois dans le vecteur, suivi d'un mélange aléatoire pour simuler un ordre d'exécution aléatoire.
+
+5. **Planification et Évaluation** :
+   La fonction \texttt{Evaluer} calcule les dates de début pour chaque opération en tenant compte de l'ordre défini par le vecteur de Bierwirth et des disponibilités des machines. J'ai pris soin de gérer les conflits d'accès aux machines pour garantir que les opérations ne se chevauchent pas.
+
+\section{Structure du programme}
+
+Le programme se compose des éléments suivants :
+\begin{itemize}
+    \item Une structure \texttt{Instance} pour stocker les valeurs.
+    \item Une fonction \texttt{lire\_graphe()} qui lit le fichier texte et cumule les durées.
+    \item Une fonction \texttt{V\_Bierwirth()} qui génère un vecteur basé sur les machines et qui mélange ce vecteur aléatoirement.
+    \item Une fonction \texttt{shuffle()} pour mélanger les éléments du vecteur.
+    \item Une fonction \texttt{Evaluer()} qui calcule les dates de début des opérations et le plus long chemin.
+    \item Une fonction \texttt{main()} qui appelle les fonctions ci-dessus et affiche les résultats.
+\end{itemize}
+
+\section{Structure \texttt{Instance}}
+
+La structure \texttt{Instance} est définie comme suit :
+
+\begin{lstlisting}[language=C++]
+struct Instance {
+    int n_j;  // Nombre de jobs
+    int n_m;  // Nombre de machines
+    std::vector<std::vector<int>> machines;  // Machines associées à chaque job
+    std::vector<std::vector<int>> durees;    // Durées des opérations
+    int opt;  // Durée maximale cumulée sur une machine
+};
+\end{lstlisting}
+
+Cette structure permet de stocker le nombre de jobs \texttt{n\_j}, le nombre de machines \texttt{n\_m}, et la somme des durées cumulées pour la machine la plus utilisée dans \texttt{opt}.
+
+\section{Fonction \texttt{lire\_graphe}}
+
+La fonction \texttt{lire\_graphe()} prend en entrée le nom du fichier et la structure \texttt{Instance} et calcule la machine avec la durée cumulée maximale. Voici la définition de cette fonction :
+
+\begin{lstlisting}[language=C++]
+void lire_graphe(const string& nom_fichier, Instance& instance) {
+    ifstream fichier(nom_fichier);  // Ouvrir le fichier en mode lecture
+    if (!fichier) {
+        cerr << "Erreur lors de l'ouverture du fichier." << endl;
+        exit(1);  // Quitter le programme en cas d'erreur
+    }
+
+    // Lire le nombre de jobs et de machines
+    fichier >> instance.n_j >> instance.n_m;
+
+    // Initialiser un tableau pour cumuler les durées de chaque machine
+    vector<int> durees_machines(instance.n_m, 0);  // Tableau des durées, initialisé à 0 pour chaque machine
+
+    // Lire les données des jobs et cumuler les durées pour chaque machine
+    for (int i = 0; i < instance.n_j; ++i) {
+        for (int j = 0; j < instance.n_m; ++j) {
+            int machine, duree;
+            fichier >> machine >> duree;  // Lire la machine et la durée
+            durees_machines[machine] += duree;  // Cumuler la durée pour cette machine
+            instance.machines[i][j] = machine;  // Machine pour le job i, opération j
+            instance.durees[i][j] = duree;      // Durée pour le job i, opération j
+        }
+    }
+
+    // Trouver la machine avec la durée cumulée maximale
+    instance.opt = *max_element(durees_machines.begin(), durees_machines.end());
+
+    fichier.close();  // Fermer le fichier après lecture
+}
+\end{lstlisting}
+
+\subsection{Explication de la fonction}
+
+La fonction \texttt{lire\_graphe()} commence par ouvrir le fichier texte contenant les données des jobs et des machines. Elle lit d'abord le nombre de jobs et de machines, puis cumule les durées pour chaque machine. À la fin, la fonction identifie la machine avec la durée cumulée maximale et stocke cette valeur dans \texttt{instance.opt}.
+
+\section{Fonction \texttt{V\_Bierwirth}}
+
+La fonction \texttt{V\_Bierwirth()} génère un vecteur basé sur le nombre de machines et mélange les valeurs. Voici la définition de cette fonction :
+
+\begin{lstlisting}[language=C++]
+int* V_Bierwirth(Instance& instance) {
+    int taille_vecteur = instance.n_j * instance.n_m;  // Taille correcte : nombre de jobs * nombre de machines
+
+    // Allouer dynamiquement de la mémoire pour le vecteur de Bierwirth
+    int* VB = new int[taille_vecteur];
+    if (!VB) {
+        std::cout << "Problème lors de la génération de notre vecteur de Bierwirth" << std::endl;
+        return nullptr;  // Utiliser nullptr au lieu de Null
+    }
+
+    // Remplir le vecteur avec les jobs : chaque job apparait 'instance.n_m' fois
+    for (int i = 0; i < taille_vecteur; i++) {
+        VB[i] = i / instance.n_m;  // Remplir le vecteur avec les jobs
+    }
+
+    // Convertir le tableau dynamique en vecteur pour le mélanger
+    std::vector<int> vec(VB, VB + taille_vecteur);  // Convertir le tableau en vecteur
+    shuffle(vec);  // Mélanger le vecteur
+
+    // Remplir à nouveau le tableau avec les valeurs mélangées
+    for (int i = 0; i < vec.size(); ++i) {
+        VB[i] = vec[i];
+    }
+
+    return VB;  // Retourne le tableau mélangé
+}
+\end{lstlisting}
+
+\subsection{Explication de la fonction}
+
+La fonction \texttt{V\_Bierwirth()} commence par calculer la taille du vecteur en multipliant le nombre de jobs par le nombre de machines. Elle utilise \texttt{new} pour allouer de la mémoire pour le tableau \texttt{VB}. Ensuite, elle remplit le tableau avec des valeurs basées sur l'indice modulo le nombre de machines.
+
+Après cela, le tableau est converti en \texttt{std::vector} pour utiliser la fonction \texttt{shuffle} pour le mélanger.
+
+\section{Fonction \texttt{shuffle}}
+
+La fonction \texttt{shuffle()} est utilisée pour mélanger les éléments du vecteur :
+
+\begin{lstlisting}[language=C++]
+void shuffle(std::vector<int>& arr) {
+    srand(static_cast<unsigned int>(time(0)));  // Initialisation de la graine
+    for (int i = arr.size() - 1; i > 0; --i) {
+        int j = rand() % (i + 1);
+        std::swap(arr[i], arr[j]);  // Échanger arr[i] avec arr[j]
+    }
+}
+\end{lstlisting}
+
+Cette fonction parcourt le vecteur de la fin vers le début et échange chaque élément avec un autre élément choisi aléatoirement. Cela garantit une permutation aléatoire des éléments.
+
+\section{Fonction \texttt{Evaluer}}
+
+La fonction \texttt{Evaluer()} calcule les dates de début des opérations et le plus long chemin :
+
+\begin{lstlisting}[language=C++]
+void Evaluer(const string &mon_fichier, Instance& instance) {
+    // Lire le graphe depuis le fichier
+    lire_graphe(mon_fichier, instance);
+
+    int taille_vecteur = instance.n_j * instance.n_m; // Nombre total d'opérations
+
+    // Générer le vecteur de Bierwirth
+    int* VB = V_Bierwirth(instance);
+
+    // Stocker les dates de début pour chaque opération
+    std::vector<int> ES_ij(instance.n_j * instance.n_m, 0);  // Date de début des opérations
+
+    // Variable pour le plus long chemin
+    int plus_long_chemin = 0;
+
+    // Parcourir les jobs dans l'ordre du vecteur de Bierwirth
+    for (int i = 0; i < taille_vecteur; i++) {
+        int job = VB[i];  // Job à traiter
+
+        // Pour chaque opération du job, on calcule la date de début
+        for (int op = 0; op < instance.n_m; op++) {
+            int machine = instance.machines[job][op];
+            int duree = instance.durees[job][op];
+
+            // Trouver la date de début la plus tôt pour cette opération
+            int date_debut = 0;
+            if (op > 0) {
+                // Si ce n'est pas la première opération du job, il faut attendre que l'opération précédente soit terminée
+                date_debut = ES_ij[job * instance.n_m + op - 1] + instance.durees[job][op - 1];
+            }
+
+            // Mettre à jour la date de début pour cette opération
+            ES_ij[job * instance.n_m + op] = date_debut;
+
+            // Calculer la fin de cette opération
+            plus_long_chemin = std::max(plus_long_chemin, date_debut + duree);
+        }
+    }
+
+    // Afficher les résultats
+    std::cout << "Dates de début des opérations : " << std::endl;
+    for (int i = 0; i < taille_vecteur; i++) {
+        std::cout << ES_ij[i] << " ";
+    }
+    std::cout << std::endl;
+
+    // Afficher le plus long chemin
+    std::cout << "Le plus long chemin est : " << plus_long_chemin << std::endl;
+
+    delete[] VB;
+}
+\end{lstlisting}
+
+\subsection{Explication de la fonction}
+
+La fonction \texttt{Evaluer()} commence par lire les données du fichier et remplit la structure \texttt{Instance}. Elle génère ensuite le vecteur de Bierwirth et initialise un vecteur pour stocker les dates de début des opérations. 
+
+Pour chaque opération, la fonction calcule la date de début en tenant compte de la disponibilité de la machine et des opérations précédentes. À la fin, elle affiche les dates de début et le plus long chemin.
+
+\section{Fonction \texttt{main}}
+
+La fonction \texttt{main()} appelle les autres fonctions et affiche les résultats :
+
+\begin{lstlisting}[language=C++]
+int main() {
+    Instance instance;  // Créer une instance de la structure
+
+    // Appeler la fonction lire_graphe pour remplir les informations
+    lire_graphe("La01.txt", instance);
+
+    // Afficher la valeur de opt (la durée cumulée maximale)
+    std::cout << "La plus longue durée sur une machine est : " << instance.opt << std::endl;
+
+    // Générer le vecteur de Bierwirth
+    int* vecteur = V_Bierwirth(instance);
+
+    // Afficher le vecteur généré
+    for (int i = 0; i < instance.n_j * instance.n_m; ++i) {  // Correction ici
+        std::cout << vecteur[i] << " ";
+    }
+    std::cout << std::endl;
+
+    // Tester la fonction Evaluer avec un fichier texte contenant les données des jobs et des machines
+    Evaluer("La01.txt", instance);
+
+    // Libérer la mémoire
+    delete[] vecteur;  // Utiliser delete[] pour libérer la mémoire allouée
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Explication de la fonction}
+
+La fonction \texttt{main()} crée une instance de la structure \texttt{Instance} et appelle la fonction \texttt{lire\_graphe()} pour charger les données. Elle affiche ensuite la durée cumulée maximale sur une machine. Le vecteur de Bierwirth est généré et affiché, suivi de l'appel à la fonction \texttt{Evaluer()} pour calculer les dates de début et le plus long chemin.
+
+\section{Techniques Clés Utilisées}
+
+\begin{itemize}
+    \item **Structures de Données** : Utilisation de la structure \texttt{Instance} et des vecteurs dynamiques pour organiser et gérer les données.
+    \item **Gestion de la Mémoire** : Allocation dynamique et libération de mémoire pour gérer les vecteurs et tableaux de manière efficace.
+    \item **Lecture de Fichiers** : Utilisation de \texttt{ifstream} pour lire les données depuis un fichier texte.
+    \item **Mélange de Vecteurs** : Application de l'algorithme de Fisher-Yates pour mélanger le vecteur de Bierwirth de manière aléatoire.
+    \item **Calcul de Dates et Gestion des Conflits** : Méthodes pour calculer les dates de début des opérations en tenant compte des disponibilités des machines et des dépendances entre les opérations.
+\end{itemize}
+
+\section{Conclusion}
+
+Ce programme permet de lire un fichier texte représentant des jobs et des machines et de calculer la somme des durées sur la machine la plus utilisée. Grâce à la fonction \texttt{lire\_graphe()}, le programme remplit directement la structure \texttt{Instance} avec la durée maximale, ce qui permet d'obtenir facilement le résultat à partir de la fonction \texttt{main()}. La fonction \texttt{V\_Bierwirth()} génère un vecteur mélangé de manière aléatoire qui peut être utilisé pour d'autres calculs dans le cadre du problème de Job-Shop.
+
+\end{document}

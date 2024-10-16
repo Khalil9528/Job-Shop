@@ -1,0 +1,19 @@
+\babel@toc {french}{}\relax 
+\contentsline {section}{\numberline {1}Introduction}{2}{}%
+\contentsline {section}{\numberline {2}Définition des Variables}{2}{}%
+\contentsline {section}{\numberline {3}Étapes de l'Algorithme}{2}{}%
+\contentsline {subsection}{\numberline {3.1}Initialisation}{2}{}%
+\contentsline {subsection}{\numberline {3.2}Boucle Principale}{2}{}%
+\contentsline {subsubsection}{\numberline {3.2.1}Description Pas à Pas}{3}{}%
+\contentsline {section}{\numberline {4}Exemple Illustratif}{3}{}%
+\contentsline {subsection}{\numberline {4.1}Paramètres de l'Exemple}{3}{}%
+\contentsline {subsection}{\numberline {4.2}Étapes de l'Algorithme avec Cet Exemple}{3}{}%
+\contentsline {subsubsection}{\numberline {4.2.1}Étape 1 : i = 1 (T1)}{4}{}%
+\contentsline {subsubsection}{\numberline {4.2.2}Étape 2 : i = 2 (T2)}{4}{}%
+\contentsline {subsubsection}{\numberline {4.2.3}Étape 3 : i = 3 (T3)}{4}{}%
+\contentsline {subsubsection}{\numberline {4.2.4}Étape 4 : i = 4 (T1)}{4}{}%
+\contentsline {subsubsection}{\numberline {4.2.5}Étape 5 : i = 5 (T2)}{5}{}%
+\contentsline {subsubsection}{\numberline {4.2.6}Étape 6 : i = 6 (T3)}{5}{}%
+\contentsline {subsection}{\numberline {4.3}Résultat Final}{5}{}%
+\contentsline {section}{\numberline {5}Conclusion}{5}{}%
+\contentsline {section}{\numberline {6}Annexe : Code C++}{6}{}%

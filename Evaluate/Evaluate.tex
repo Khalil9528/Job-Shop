@@ -1,0 +1,251 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{amsmath}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\title{Planification des Tâches sur Plusieurs Machines : Explication et Implémentation en C++}
+\author{Votre Nom}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+Cet article présente une explication détaillée d'un algorithme de planification des tâches (scheduling) sur plusieurs machines, souvent utilisé dans le contexte du \textit{Job Shop Scheduling}. L'objectif est de déterminer les dates de début (\texttt{st[i][j]}) pour chaque tâche sur différentes machines, tout en respectant les contraintes de séquencement et les dépendances entre les tâches.
+
+\section{Définition des Variables}
+
+Pour comprendre l'algorithme, il est essentiel de définir clairement les variables utilisées :
+
+\begin{itemize}
+    \item \textbf{st[i][j]} : Date de début de la j\up{ème} tâche sur la i\up{ème} machine.
+    \item \textbf{pere[i][j] = (k, p)} : Prédecesseur de la j\up{ème} tâche sur la i\up{ème} machine, représenté sous la forme (k, p), où k est la machine et p est la tâche prédécesseur.
+    \item \textbf{njob[j]} : Nombre de tâches déjà planifiées pour la machine j.
+    \item \textbf{V[i]} : Tableau représentant l'ordre des tâches à exécuter.
+    \item \textbf{m[j][njob[j]]} : Machine assignée à la j\up{ème} tâche au n\up{ème} ordre.
+    \item \textbf{p[j][njob[j]]} : Durée de traitement de la j\up{ème} tâche au n\up{ème} ordre.
+    \item \textbf{nmach[machine]} : Dernière tâche programmée sur une machine spécifique.
+\end{itemize}
+
+\section{Étapes de l'Algorithme}
+
+L'algorithme se décompose en plusieurs étapes clés :
+
+\subsection{Initialisation}
+
+\begin{verbatim}
+st[0][0] = 0
+Pour tout i et j : st[i][j] = 0
+njob[n] = [0]
+\end{verbatim}
+
+\begin{itemize}
+    \item \texttt{st[0][0] = 0} : La première tâche commence à l'instant 0.
+    \item Initialisation de toutes les dates de début \texttt{st[i][j]} à 0.
+    \item Initialisation du compteur \texttt{njob[j]} pour chaque machine j à 0, indiquant qu'aucune tâche n'est encore planifiée sur aucune machine.
+\end{itemize}
+
+\subsection{Boucle Principale}
+
+\begin{verbatim}
+Pour i de 1 à n*m faire 
+  j = V[i]
+  njob[j]++ 
+  si njob[j]>1 alors (cas arc horizontal)
+    date = st[j][njob[j]-1]
+    si date + p[j][njob[j]-1] > st[j][njob[j]]
+        st[j][njob[j]] = date + p[j][njob[j]-1]
+        pere[j][njob[j]] =  (j, njob[j]-1)
+    fsi 
+  fsi 
+  
+  machine = m[j][njob[j]]
+  si nmach[machine] != (0,0) alors 
+    date = st[j][njob[j]-1]
+    duree = p[j][njob[j]-1]
+    si date + duree > st[j][njob[j]]
+        st[j][njob[j]] = date + duree
+        pere [j][njob[j]] =  (j, njob[j]-1)
+  nmach[machine] = (j, njob[j]-1)
+\end{verbatim}
+
+\subsubsection{Description Pas à Pas}
+
+\begin{enumerate}
+    \item \textbf{Sélection de la Tâche :} Pour chaque étape \texttt{i}, la tâche \texttt{j} est sélectionnée selon l'ordre défini dans le tableau \texttt{V}.
+    \item \textbf{Incrémentation du Compteur :} Le compteur \texttt{njob[j]} est incrémenté pour indiquer qu'une nouvelle tâche sur la machine \texttt{j} est planifiée.
+    \item \textbf{Gestion des Conflits sur la Même Machine (Arc Horizontal) :}
+    \begin{itemize}
+        \item Si \texttt{njob[j] > 1}, cela signifie qu'il y a plus d'une tâche à exécuter sur la même machine.
+        \item La date de début de la tâche actuelle est ajustée pour qu'elle commence après la fin de la tâche précédente sur la même machine.
+        \item Le prédécesseur de la tâche actuelle est enregistré.
+    \end{itemize}
+    \item \textbf{Gestion des Machines :}
+    \begin{itemize}
+        \item La machine assignée à la tâche actuelle est déterminée.
+        \item Si la machine est déjà occupée, la date de début de la tâche actuelle est ajustée pour qu'elle commence après la fin de la tâche en cours sur cette machine.
+        \item L'état de la machine est mis à jour avec la dernière tâche programmée.
+    \end{itemize}
+\end{enumerate}
+
+\section{Exemple Illustratif}
+
+Pour mieux comprendre l'algorithme, considérons un exemple concret avec **2 machines** et **3 tâches**.
+
+\subsection{Paramètres de l'Exemple}
+
+\begin{itemize}
+    \item \textbf{Machines} : M1, M2
+    \item \textbf{Tâches} : T1, T2, T3
+    \item \textbf{Durée de Traitement (\texttt{p})} :
+\end{itemize}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Tâche} & \textbf{Machine Assignée} & \textbf{Durée} \\ \midrule
+T1            & M1                        & 4               \\
+T2            & M1                        & 3               \\
+T3            & M2                        & 2               \\
+T1            & M2                        & 1               \\
+T2            & M2                        & 2               \\
+T3            & M1                        & 3               \\ \bottomrule
+\end{tabular}
+\caption{Durées des Tâches sur les Machines}
+\end{table}
+
+\begin{itemize}
+    \item \textbf{Ordre des Tâches (\texttt{V})} : [T1, T2, T3, T1, T2, T3]
+\end{itemize}
+
+\subsection{Étapes de l'Algorithme avec Cet Exemple}
+
+Nous allons parcourir chaque étape de la boucle principale et mettre à jour les variables en conséquence.
+
+\subsubsection{Étape 1 : i = 1 (T1)}
+
+\begin{itemize}
+    \item \textbf{Sélection de la Tâche} : T1
+    \item \textbf{Incrémentation} : \texttt{njob[T1] = 1}
+    \item \textbf{Arc Horizontal} : Pas de conflit car \texttt{njob[T1] = 1}.
+    \item \textbf{Machine Assignée} : M1
+    \item \textbf{Disponibilité de la Machine} : M1 est disponible.
+    \item \textbf{Mise à Jour} : \texttt{nmach[M1] = (T1, 1)}
+\end{itemize}
+
+\subsubsection{Étape 2 : i = 2 (T2)}
+
+\begin{itemize}
+    \item \textbf{Sélection de la Tâche} : T2
+    \item \textbf{Incrémentation} : \texttt{njob[T2] = 1}
+    \item \textbf{Arc Horizontal} : Pas de conflit car \texttt{njob[T2] = 1}.
+    \item \textbf{Machine Assignée} : M1
+    \item \textbf{Disponibilité de la Machine} : M1 est occupée par T1 jusqu'à 4.
+    \item \textbf{Ajustement de la Date} : \texttt{st[T2][1] = 4}
+    \item \textbf{Mise à Jour} : \texttt{nmach[M1] = (T2, 1)}
+\end{itemize}
+
+\subsubsection{Étape 3 : i = 3 (T3)}
+
+\begin{itemize}
+    \item \textbf{Sélection de la Tâche} : T3
+    \item \textbf{Incrémentation} : \texttt{njob[T3] = 1}
+    \item \textbf{Arc Horizontal} : Pas de conflit car \texttt{njob[T3] = 1}.
+    \item \textbf{Machine Assignée} : M2
+    \item \textbf{Disponibilité de la Machine} : M2 est disponible.
+    \item \textbf{Mise à Jour} : \texttt{nmach[M2] = (T3, 1)}
+\end{itemize}
+
+\subsubsection{Étape 4 : i = 4 (T1)}
+
+\begin{itemize}
+    \item \textbf{Sélection de la Tâche} : T1
+    \item \textbf{Incrémentation} : \texttt{njob[T1] = 2}
+    \item \textbf{Arc Horizontal} :
+    \begin{itemize}
+        \item Date précédente : \texttt{st[T1][1] = 0}
+        \item Durée précédente : 4
+        \item \texttt{st[T1][2] = 4}
+        \item \textbf{Prédécesseur} : \texttt{pere[T1][2] = (T1, 1)}
+    \end{itemize}
+    \item \textbf{Machine Assignée} : M2
+    \item \textbf{Disponibilité de la Machine} : M2 est occupée par T3 jusqu'à 2.
+    \item \textbf{Ajustement de la Date} : \texttt{st[T1][2] = 4} (Pas de chevauchement)
+    \item \textbf{Mise à Jour} : \texttt{nmach[M2] = (T1, 2)}
+\end{itemize}
+
+\subsubsection{Étape 5 : i = 5 (T2)}
+
+\begin{itemize}
+    \item \textbf{Sélection de la Tâche} : T2
+    \item \textbf{Incrémentation} : \texttt{njob[T2] = 2}
+    \item \textbf{Arc Horizontal} :
+    \begin{itemize}
+        \item Date précédente : \texttt{st[T2][1] = 4}
+        \item Durée précédente : 3
+        \item \texttt{st[T2][2] = 7}
+        \item \textbf{Prédécesseur} : \texttt{pere[T2][2] = (T2, 1)}
+    \end{itemize}
+    \item \textbf{Machine Assignée} : M2
+    \item \textbf{Disponibilité de la Machine} : M2 est occupée par T1 jusqu'à 5.
+    \item \textbf{Ajustement de la Date} : \texttt{st[T2][2] = 7} (Après la fin de T1)
+    \item \textbf{Mise à Jour} : \texttt{nmach[M2] = (T2, 2)}
+\end{itemize}
+
+\subsubsection{Étape 6 : i = 6 (T3)}
+
+\begin{itemize}
+    \item \textbf{Sélection de la Tâche} : T3
+    \item \textbf{Incrémentation} : \texttt{njob[T3] = 2}
+    \item \textbf{Arc Horizontal} :
+    \begin{itemize}
+        \item Date précédente : \texttt{st[T3][1] = 0}
+        \item Durée précédente : 2
+        \item \texttt{st[T3][2] = 2}
+        \item \textbf{Prédécesseur} : \texttt{pere[T3][2] = (T3, 1)}
+    \end{itemize}
+    \item \textbf{Machine Assignée} : M1
+    \item \textbf{Disponibilité de la Machine} : M1 est occupée par T2 jusqu'à 7.
+    \item \textbf{Ajustement de la Date} : \texttt{st[T3][2] = 7}
+    \item \textbf{Mise à Jour} : \texttt{nmach[M1] = (T3, 2)}
+\end{itemize}
+
+\subsection{Résultat Final}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Machine} & \textbf{Tâche} & \textbf{Occurrence} & \textbf{Date de Début} \\ \midrule
+M1 & T1 & 1 & 0 \\
+M1 & T2 & 1 & 4 \\
+M1 & T3 & 2 & 7 \\
+M2 & T3 & 1 & 0 \\
+M2 & T1 & 2 & 4 \\
+M2 & T2 & 2 & 7 \\ \bottomrule
+\end{tabular}
+\caption{Dates de Début des Tâches Planifiées}
+\end{table}
+
+\section{Conclusion}
+
+Cet algorithme permet de planifier efficacement des tâches sur plusieurs machines en tenant compte des dépendances et des contraintes de séquencement. L'exemple illustratif démontre comment les dates de début sont ajustées pour éviter les conflits et optimiser l'utilisation des machines. Pour une application pratique, il est essentiel de valider l'algorithme avec divers scénarios et d'apporter des ajustements si nécessaire.
+
+\section{Annexe : Code C++}
+
+Le code C++ ci-dessous implémente l'algorithme de planification des tâches décrit précédemment.
+
+\end{document}
